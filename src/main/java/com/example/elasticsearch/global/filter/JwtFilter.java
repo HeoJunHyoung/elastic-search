@@ -47,15 +47,21 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         String username = jwtUtil.getUsername(token);
-        String role = jwtUtil.getRole(token);
-        Long userId = jwtUtil.getUserId(token); // 토큰에서 ID 꺼내기
+        String role = jwtUtil.getRole(token); // 토큰에서 꺼낸 값: "ROLE_USER"
+        Long userId = jwtUtil.getUserId(token);
 
-        // UserEntity 생성 시 ID 포함
+        // [핵심 수정] "ROLE_" 접두사 제거 로직 추가
+        String roleName = role;
+        if (role.startsWith("ROLE_")) {
+            roleName = role.substring(5); // "ROLE_" (5글자) 제거 -> "USER"
+        }
+
+        // UserEntity 생성
         UserEntity userEntity = UserEntity.builder()
-                .id(userId) // DB 조회 없이 ID 세팅 가능
+                .id(userId)
                 .username(username)
                 .password("temppassword")
-                .role(Role.valueOf(role))
+                .role(Role.valueOf(roleName)) // 이제 "USER"로 변환하므로 에러 없음
                 .build();
 
         CustomUserDetails customUserDetails = new CustomUserDetails(userEntity);
