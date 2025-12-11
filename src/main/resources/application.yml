@@ -1,7 +1,24 @@
-
 spring:
   elasticsearch:
     uris: http://localhost:9200
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/es?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 100
+    show-sql: true
+
+  jwt:
+    secret: vfr79d8f9q327498fh398fhw98fh3298fh9382hf9832hf98
 
 logging:
   level:
