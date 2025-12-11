@@ -14,6 +14,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -28,7 +34,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // AuthenticationManager Bean 등록 (LoginFilter에서 사용)
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
@@ -37,33 +42,57 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
+        // CORS 설정 추가
+        http
+                .cors((cors) -> cors.configurationSource(apiConfigurationSource()));
+
         http
                 .csrf((auth) -> auth.disable())
-                .formLogin((auth) -> auth.disable()) // Form Login 비활성화
-                .httpBasic((auth) -> auth.disable()); // HTTP Basic 비활성화
+                .formLogin((auth) -> auth.disable())
+                .httpBasic((auth) -> auth.disable());
 
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/login", "/", "/join", "/joinProc").permitAll()
+                        .requestMatchers("/login", "/", "/join", "/joinProc").permitAll() // /joinProc 허용 확인 필요
+                        .requestMatchers("/loginProc").permitAll() // 로그인 필터 경로 명시적 허용 권장
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 );
 
-        // 커스텀 필터 등록
-        // 1. JwtFilter: 요청 앞단에서 쿠키 검증
         http.addFilterBefore(new JwtFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
 
-        // 2. LoginFilter: 로그인 처리 및 쿠키 발급 (AuthenticationManager 주입 필요)
         LoginFilter loginFilter = new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil);
-        loginFilter.setFilterProcessesUrl("/loginProc"); // 로그인 엔드포인트 설정
-
+        loginFilter.setFilterProcessesUrl("/loginProc");
         http.addFilterAt(loginFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // 세션 설정: STATELESS (서버에 세션을 저장하지 않음)
         http
                 .sessionManagement((session) -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
+    }
+
+    // CORS 설정 정의
+    public CorsConfigurationSource apiConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // 프론트엔드 서버 주소 허용 (VS Code Live Server)
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5500", "http://127.0.0.1:5500"));
+
+        // 허용할 HTTP 메서드
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        // 쿠키 및 인증 정보 포함 허용 (필수)
+        configuration.setAllowCredentials(true);
+
+        // 허용할 헤더
+        configuration.setAllowedHeaders(Collections.singletonList("*"));
+
+        // 노출할 헤더 (필요시 추가)
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
