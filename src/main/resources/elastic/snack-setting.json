@@ -6,6 +6,13 @@
         "decompound_mode": "mixed"
       }
     },
+    "filter": {
+      "my_edge_ngram_filter": {
+        "type": "edge_ngram",
+        "min_gram": 1,
+        "max_gram": 10
+      }
+    },
     "analyzer": {
       "nori": {
         "type": "custom",
@@ -14,6 +21,16 @@
           "lowercase",
           "nori_part_of_speech",
           "nori_readingform"
+        ]
+      },
+      "nori_edge_ngram": {
+        "type": "custom",
+        "tokenizer": "nori_user_tokenizer",
+        "filter": [
+          "lowercase",
+          "nori_part_of_speech",
+          "nori_readingform",
+          "my_edge_ngram_filter"
         ]
       }
     }
