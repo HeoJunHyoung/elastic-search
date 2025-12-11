@@ -1,6 +1,7 @@
 package com.example.elasticsearch.global.filter;
 
 import com.example.elasticsearch.domain.user.dto.request.JoinRequest;
+import com.example.elasticsearch.global.util.CustomUserDetails;
 import com.example.elasticsearch.global.util.JwtUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -49,16 +50,22 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) {
 
-        // 유저 정보 추출
-        String username = authResult.getName();
+        // 1. Principal을 CustomUserDetails로 캐스팅
+        CustomUserDetails customUserDetails = (CustomUserDetails) authResult.getPrincipal();
 
+        String username = customUserDetails.getUsername();
+
+        // 2. Role 추출
         Collection<? extends GrantedAuthority> authorities = authResult.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
-        // 토큰 생성 (유효시간 1시간 예시)
-        String token = jwtUtil.createJwt(username, role, 60*60*1000L);
+        // 3. 유저 ID 추출
+        Long userId = customUserDetails.getId();
+
+        // 4. 토큰 생성 시 userId 포함
+        String token = jwtUtil.createJwt(userId, username, role, 60*60*1000L);
 
         // 쿠키 생성
         Cookie cookie = new Cookie("accessToken", token);

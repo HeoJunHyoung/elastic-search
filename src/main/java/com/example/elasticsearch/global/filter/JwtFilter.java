@@ -2,6 +2,7 @@ package com.example.elasticsearch.global.filter;
 
 import com.example.elasticsearch.domain.user.entity.UserEntity;
 import com.example.elasticsearch.domain.user.entity.enumerate.Role;
+import com.example.elasticsearch.global.util.CustomUserDetails;
 import com.example.elasticsearch.global.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -45,28 +46,26 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 토큰에서 username, role 획득
         String username = jwtUtil.getUsername(token);
         String role = jwtUtil.getRole(token);
+        Long userId = jwtUtil.getUserId(token); // 토큰에서 ID 꺼내기
 
-        // UserDetails 객체 생성 (비밀번호는 필요 없음, 이미 검증됨)
-        // 주의: DB 조회를 하지 않고 토큰 정보로만 인증 객체를 만듦 (성능 최적화)
+        // UserEntity 생성 시 ID 포함
         UserEntity userEntity = UserEntity.builder()
+                .id(userId) // DB 조회 없이 ID 세팅 가능
                 .username(username)
-                .password("temppassword") // 임의값
+                .password("temppassword")
                 .role(Role.valueOf(role))
                 .build();
 
-        UserDetails userDetails = User.builder()
-                .username(userEntity.getUsername())
-                .password(userEntity.getPassword())
-                .roles(userEntity.getRole().name())
-                .build();
+        CustomUserDetails customUserDetails = new CustomUserDetails(userEntity);
 
-        // 스프링 시큐리티 인증 토큰 생성
-        Authentication authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        Authentication authToken = new UsernamePasswordAuthenticationToken(
+                customUserDetails,
+                null,
+                customUserDetails.getAuthorities()
+        );
 
-        // 세션(SecurityContext)에 사용자 등록 -> 이번 요청 동안만 유효
         SecurityContextHolder.getContext().setAuthentication(authToken);
 
         filterChain.doFilter(request, response);

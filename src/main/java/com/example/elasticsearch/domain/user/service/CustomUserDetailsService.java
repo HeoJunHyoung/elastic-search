@@ -4,6 +4,7 @@ import com.example.elasticsearch.domain.user.dto.request.JoinRequest;
 import com.example.elasticsearch.domain.user.entity.UserEntity;
 import com.example.elasticsearch.domain.user.entity.enumerate.Role;
 import com.example.elasticsearch.domain.user.repository.UserRepository;
+import com.example.elasticsearch.global.util.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -37,18 +38,13 @@ public class CustomUserDetailsService implements UserDetailsService {
         userRepository.save(userEntity);
     }
 
-    // Spring Security가 로그인 시 실행하는 메서드
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
         UserEntity userData = userRepository.findByUsername(username);
 
         if (userData != null) {
-            return User.builder()
-                    .username(userData.getUsername())
-                    .password(userData.getPassword())
-                    .roles(String.valueOf(Role.USER))
-                    .build();
+            return new CustomUserDetails(userData);
         }
 
         throw new UsernameNotFoundException("User not found with username: " + username);
