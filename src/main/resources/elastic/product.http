@@ -1,0 +1,37 @@
+### 1. 인덱스 삭제 (초기화용)
+DELETE http://localhost:9200/products
+
+### 2. 인덱스 생성 (Settings + Mappings 적용)
+# product-index.json 파일을 읽어서 인덱스를 생성합니다.
+PUT http://localhost:9200/products
+Content-Type: application/json
+
+< ./product-index.json
+
+### 3. 인덱스 생성 확인 (설정 조회)
+GET http://localhost:9200/products
+
+### 4. 문서 생성 테스트 (단건)
+POST http://localhost:9200/products/_doc/1
+Content-Type: application/json
+
+{
+  "title": "테스트 상품 아이폰 15",
+  "content": "애플의 최신 스마트폰입니다.",
+  "price": 1500000,
+  "quantity": 10,
+  "category": "SMARTPHONE"
+}
+
+### 5. 검색 테스트 (분석기 동작 확인)
+# "스마트폰"으로 검색했을 때 위 데이터가 나와야 함
+GET http://localhost:9200/products/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "content": "스마트폰"
+    }
+  }
+}

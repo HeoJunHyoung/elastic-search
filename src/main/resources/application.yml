@@ -20,9 +20,15 @@ spring:
   jwt:
     secret: vfr79d8f9q327498fh398fhw98fh3298fh9382hf9832hf98
 
+  data:
+    elasticsearch:
+      repositories:
+        enabled: false
+
 logging:
   level:
     org.elasticsearch.client: TRACE
 
 server:
   port: 8023
+
