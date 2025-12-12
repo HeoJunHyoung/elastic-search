@@ -36,7 +36,6 @@ public class ProductSyncService {
             backoff = @Backoff(delay = 1000, multiplier = 2)
     )
     public void syncToElasticsearch(ProductSyncEvent event) {
-        // 기존의 retryTemplate.execute() 람다식을 제거하고 로직만 남김
         try {
             if (event.getOperation() == ProductSyncEvent.SyncOperation.DELETE) {
                 syncDelete(event.getProductId());
@@ -59,8 +58,7 @@ public class ProductSyncService {
         log.error("CRITICAL: 3회 재시도 후에도 ES 동기화 최종 실패. ProductID: {}", event.getProductId());
         log.error("원인: ", e);
 
-        // 실무에서는 여기서 'Dead Letter Queue(DLQ)' 테이블에 저장하거나
-        // 슬랙/이메일 알림을 보내 개발자가 수동 처리하도록 조치함.
+        // 여기서 'Dead Letter Queue(DLQ)' 테이블에 저장하거나 슬랙/이메일 알림을 보내 개발자가 수동 처리하도록 조치함.
     }
 
     private void syncCreateOrUpdate(String productId) throws IOException {
