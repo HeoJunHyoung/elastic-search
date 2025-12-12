@@ -20,6 +20,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
+    @Transactional
     public void createProductApi(ProductCreateRequest request) {
 
         ProductEntity productEntity = ProductEntity.of(
