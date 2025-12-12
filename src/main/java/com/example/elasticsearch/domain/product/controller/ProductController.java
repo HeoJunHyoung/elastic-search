@@ -26,4 +26,11 @@ public class ProductController {
         return ResponseEntity.ok(responses);
     }
 
+    // 요청 예시: GET /posts/search?keyword=아이폰
+    @GetMapping("/posts/search")
+    public ResponseEntity<List<ProductResponse>> search(@RequestParam String keyword) {
+        List<ProductResponse> responses = productService.search(keyword);
+        return ResponseEntity.ok(responses);
+    }
+
 }

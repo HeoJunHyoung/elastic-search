@@ -1,5 +1,8 @@
 package com.example.elasticsearch.domain.product.service;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import com.example.elasticsearch.domain.product.document.ProductDocument;
 import com.example.elasticsearch.domain.product.dto.request.ProductCreateRequest;
 import com.example.elasticsearch.domain.product.dto.response.ProductResponse;
 import com.example.elasticsearch.domain.product.entity.ProductEntity;
@@ -12,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+import co.elastic.clients.elasticsearch.core.search.Hit;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +30,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final ProductSyncService productSyncService;
+    private final ElasticsearchClient elasticsearchClient;
 
     @Transactional
     public void createProductApi(ProductCreateRequest request) {
@@ -67,5 +73,47 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    public List<ProductResponse> search(String keyword) {
+        try {
+            SearchResponse<ProductDocument> response = elasticsearchClient.search(s -> s
+                            .index("products") // 인덱스 명시
+                            .query(q -> q
+                                    .multiMatch(m -> m
+                                            .fields("title", "content") // 검색할 필드들
+                                            .query(keyword)             // 검색어
+                                    )
+                            ),
+                    ProductDocument.class // 결과 매핑할 클래스
+            );
+
+            // 결과 변환: SearchResponse -> List<ProductResponse>
+            return response.hits().hits().stream()
+                    .map(Hit::source) // Hit에서 ProductDocument 꺼내기
+                    .map(doc -> ProductResponse.builder()
+                            .id(Long.valueOf(doc.getId()))
+                            .title(doc.getTitle())
+                            .content(doc.getContent())
+                            .price(doc.getPrice())
+                            .quantity(doc.getQuantity())
+                            .category(doc.getCategory())
+                            .build())
+                    .collect(Collectors.toList());
+
+        } catch (IOException e) {
+            log.error("Elasticsearch 검색 실패", e);
+            throw new RuntimeException("검색 중 오류가 발생했습니다.");
+        }
+    }
+
+    private ProductResponse toResponse(ProductEntity p) {
+        return ProductResponse.builder()
+                .id(p.getId())
+                .title(p.getTitle())
+                .content(p.getContent())
+                .price(p.getPrice())
+                .quantity(p.getQuantity())
+                .category(p.getCategory())
+                .build();
+    }
 
 }
