@@ -55,6 +55,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/login", "/", "/join", "/joinProc").permitAll() // /joinProc 허용 확인 필요
                         .requestMatchers("/loginProc").permitAll() // 로그인 필터 경로 명시적 허용 권장
+                        .requestMatchers("/posts").permitAll()
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 );
