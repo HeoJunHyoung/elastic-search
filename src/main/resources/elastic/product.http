@@ -14,7 +14,6 @@ GET http://localhost:9200/products
 #### 4. 문서 생성 테스트 (단건)
 #POST http://localhost:9200/products/_doc/1
 #Content-Type: application/json
-#
 #{
 #  "title": "테스트 상품 아이폰 15",
 #  "content": "애플의 최신 스마트폰입니다.",
