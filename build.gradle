@@ -6,7 +6,6 @@ plugins {
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
-description = 'elastic-search'
 
 java {
     toolchain {
@@ -20,7 +19,7 @@ repositories {
 
 dependencies {
     /* --- Spring --- */
-    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
@@ -28,12 +27,11 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    /* --- MySQL Driver --- */
+    /* --- MySQL --- */
     runtimeOnly 'com.mysql:mysql-connector-j'
 
     /* --- Test --- */
-    testImplementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     /* --- Security --- */
@@ -42,9 +40,12 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
 
-    // Spring Retry 라이브러리
+    /* --- Retry (수정됨) --- */
+    // 1. 핵심 라이브러리
     implementation 'org.springframework.retry:spring-retry'
-    implementation 'org.springframework.boot:spring-boot-starter-retry'
+    // 2. @Retryable 어노테이션 동작을 위한 AOP 라이브러리 (필수)
+    implementation 'org.springframework:spring-aspects'
+    // (기존의 spring-boot-starter-retry는 삭제)
 }
 
 tasks.named('test') {

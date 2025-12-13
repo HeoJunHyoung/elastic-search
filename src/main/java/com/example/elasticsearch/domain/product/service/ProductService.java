@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class ProductService {
 
@@ -81,6 +80,7 @@ public class ProductService {
                                     .multiMatch(m -> m
                                             .fields("title", "content") // 검색할 필드들
                                             .query(keyword)             // 검색어
+                                            .fuzziness("AUTO")
                                     )
                             ),
                     ProductDocument.class // 결과 매핑할 클래스
@@ -103,17 +103,6 @@ public class ProductService {
             log.error("Elasticsearch 검색 실패", e);
             throw new RuntimeException("검색 중 오류가 발생했습니다.");
         }
-    }
-
-    private ProductResponse toResponse(ProductEntity p) {
-        return ProductResponse.builder()
-                .id(p.getId())
-                .title(p.getTitle())
-                .content(p.getContent())
-                .price(p.getPrice())
-                .quantity(p.getQuantity())
-                .category(p.getCategory())
-                .build();
     }
 
 }
